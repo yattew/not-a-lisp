@@ -6,5 +6,5 @@
 # TODO
 - if statements
 - other basic functions like *,/, <, >, ==
-- y combinator
-- named functions (maybe)
+- ability to define
+- arrays/vectors
