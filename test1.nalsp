@@ -1,0 +1,3 @@
+((lambda (fn val)
+         (fn val))
+    (lambda (x) (+ 1 x)) 100)

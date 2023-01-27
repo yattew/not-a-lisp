@@ -1,9 +1,11 @@
 from typing import Any, Union
 from types_ import *
-from env import ENV
 
 
-def compile_lambda(lambda_params: list[Symbol], lambda_body: Form) -> callable:
+def compile_lambda(args: list[Union[Form, Data, Symbol]]) -> callable:
+    lambda_params = args[0].args
+    lambda_body = args[1:]
+
     def compiled_lambda(lambda_args):
         global ENV
         # check for number of lambda_args
@@ -12,8 +14,8 @@ def compile_lambda(lambda_params: list[Symbol], lambda_body: Form) -> callable:
                 "number of arguments don't match number of parameters")
 
         # bind the parameters with the values passed in the lambda
-        for param, val in zip(lambda_params, lambda_args):
-            ENV[param.name] = ENV.get(param.name, []) + [val]
+        for param, arg in zip(lambda_params, lambda_args):
+            ENV[param.name] = ENV.get(param.name, []) + [eval_expr(arg)]
 
         # execute the body with the new updated env
         res = list(map(eval_expr, lambda_body))[-1]
@@ -30,18 +32,12 @@ def eval_expr(expr: Union[Data, Symbol, Form]) -> Any:
     global lambda_count
     global ENV
     if type(expr) == Form:
-        # for now lambda is special and seperate from everything else.
-        if type(expr.args[0]) == Symbol and expr.args[0] == Symbol("lambda"):
-            lambda_params = expr.args[1].args
-            lambda_body = expr.args[2:]
-            compiled_lambda = compile_lambda(lambda_params, lambda_body)
-            return compiled_lambda
-        else:
-            form_args = list(map(eval_expr, expr.args))
-            fn = form_args[0]
-            fn_args = form_args[1:]
-            res = fn(fn_args)
-            return res
+        # print("expr:",expr)
+        fn = eval_expr(expr.args[0])
+        # print(fn)
+        fn_args = expr.args[1:]
+        res = fn(fn_args)
+        return res
     elif type(expr) == Data:
         return expr
     elif type(expr) == Symbol:
@@ -50,3 +46,16 @@ def eval_expr(expr: Union[Data, Symbol, Form]) -> Any:
         return ENV[expr.name][-1]
     else:
         raise Exception("unknown expr type")
+
+
+ENV = {
+    '+': [
+        lambda x: Data(sum(map(lambda x: eval_expr(x).val, x)))
+    ],
+    '-': [
+        lambda x: Data(eval_expr(x[0]).val - ENV['+'][-1](x[1:]).val)
+    ],
+    'lambda': [
+        compile_lambda
+    ]
+}
