@@ -29,24 +29,20 @@ def compile_lambda(args: list[Union[Form, Data, Symbol]]) -> callable:
 
 
 def eval_expr(expr: Union[Data, Symbol, Form]) -> Any:
-    global lambda_count
     global ENV
-    if type(expr) == Form:
-        # print("expr:",expr)
-        fn = eval_expr(expr.args[0])
-        # print(fn)
-        fn_args = expr.args[1:]
-        res = fn(fn_args)
-        return res
-    elif type(expr) == Data:
-        return expr
-    elif type(expr) == Symbol:
-        if expr.name not in ENV:
-            raise Exception(f"{expr} no in current env\n {ENV}")
-        return ENV[expr.name][-1]
-    else:
-        raise Exception("unknown expr type")
-
+    match expr.__class__.__name__:
+        case Form.__name__:
+            fn = eval_expr(expr.args[0])
+            fn_args = expr.args[1:]
+            return fn(fn_args)
+        case Data.__name__:
+            return expr
+        case Symbol.__name__:
+            if expr.name not in ENV:
+                raise Exception(f"{expr} no in current env\n {ENV}")
+            return ENV[expr.name][-1]
+        case _:
+            raise Exception(f"unknown expr type \n{[type(expr)]} {expr}")
 
 ENV = {
     '+': [

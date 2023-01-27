@@ -1,1 +1,1 @@
-(lambda (x) (+ 1 x))
+((lambda (x) (+ 1 x)) 10)
